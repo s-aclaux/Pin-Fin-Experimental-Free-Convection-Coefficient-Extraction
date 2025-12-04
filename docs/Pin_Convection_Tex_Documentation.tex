@@ -1,0 +1,708 @@
+\documentclass[12pt]{article}
+
+% -------------------------------------------------
+% PACKAGES
+% -------------------------------------------------
+\usepackage[margin=0.5in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{paracol}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+\lstset{
+    language=Matlab,
+    frame=single, % Adds a frame around the code
+    breaklines=true, % Allows automatic line breaks
+    basicstyle=\ttfamily, % Uses a monospaced font
+    keywordstyle=\color{blue}, % Colors keywords
+    commentstyle=\color{green}, % Colors comments
+    stringstyle=\color{red}, % Colors strings
+    numbers=left, % Adds line numbers on the left
+    numberstyle=\small\color{gray}, % Styles the line numbers (small, gray)
+    stepnumber=1, % Number every line
+    numbersep=5pt
+}
+
+% -------------------------------------------------
+% DOCUMENT START
+% -------------------------------------------------
+\begin{document}
+
+\begin{center}
+    \Large \textbf{ME 331: Heat Transfer Laboratory} \\[0.5em]
+    \large \textbf{Lab 1: Pin Fin Experiment} \\[1em]
+    \normalsize
+    \textbf{Group Members:} \\[0.3em]
+    \begin{tabular}{ll}
+        Alexandre Claux & \#2374597 \\
+        Kent Fukuda & \#2002272 \\
+        Kyle Stanton & \#2331603 \\
+        Owen Hadford & \#2478548 \\
+
+    \end{tabular} \\[1em]
+    \textbf{Date of Experiment:} 14 November 2025 \\
+    \rule{0.9\textwidth}{0.4pt}
+\end{center}
+
+\vspace{-2em}
+
+% -------------------------------------------------
+\section*{Objective}
+The purpose of this experiment is to determine the convection heat transfer coefficients ($h$) for four different pin fins operating at steady state. Heat transfer occurs in each fin via conduction and free convection.
+
+% -------------------------------------------------
+\section*{Background / Theory}
+
+\subsection*{Governing Equation}
+Assuming one-dimensional conduction and convection from the fin tip, the temperature distribution is:
+
+\begin{equation}
+\frac{T(x)-T_\infty}{T_b - T_\infty} =
+\frac{\cosh[m(L-x)] + \frac{h}{mk}\sinh[m(L-x)]}
+{\cosh(mL) + \frac{h}{mk}\sinh(mL)}
+\end{equation}
+where \( m = \sqrt{\frac{hP}{kA_c}} \) \newline
+This can be rearranged to solve for temperature as a function of length and the convection coefficient:
+\[
+T(x) = T_\infty + (T_b - T_\infty) \frac{\cosh[m(L-x)] + \frac{h}{mk}\sinh[m(L-x)]}
+{\cosh(mL) + \frac{h}{mk}\sinh(mL)} 
+\]
+
+\subsection*{Rate of Heat Transfer}
+\begin{equation}
+q_f = \sqrt{hPkA_c}(T_b - T_\infty)
+\frac{\sinh(mL) + \frac{h}{mk}\cosh(mL)}
+{\cosh(mL) + \frac{h}{mk}\sinh(mL)}
+\end{equation}
+
+\subsection*{Least Squares Fit}
+To determine $h$, minimize the least-squares error between measured and theoretical temperature distributions:
+\begin{equation}
+S = \sum_i (T_{\text{measured},i} - T_{\text{theoretical},i})^2
+\end{equation}
+
+\newpage
+
+% -------------------------------------------------
+\section*{Experimental Setup}
+\begin{itemize}
+    \item Four fin materials: copper (square), copper (round), stainless steel (rod), and aluminum (rod).
+    \item Each fin has 4–6 thermocouples spaced along its length.
+    \item Power input measured using Keithley meters (voltage and current).
+    \item Data acquisition via Python program \texttt{Fin Experiment.py}.
+\end{itemize}
+
+\begin{paracol}{3}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\linewidth]{OneFinApparatus.png}
+        \includegraphics[width=0.9\linewidth]{FullSetup.png}
+        \caption*{Figure 1: Individual pin setup (top) and four pin experimental setup (bottom).}
+    \end{figure}
+\switchcolumn
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\linewidth]{CopperSquare_AluminiumRod.png}
+        \caption*{Figure 2: Square copper rod (left) and aluminium rod (right).}
+    \end{figure}
+\switchcolumn
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\linewidth]{CopperRod_SteelRod.png}
+        \caption*{Figure 3: Round copper rod (left) and stainless steel rod (right).}
+    \end{figure}
+\end{paracol}
+
+% -------------------------------------------------
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|c|c|}
+    \hline
+    \textbf{Fin Material} & \textbf{Dimensions (cm)} & \textbf{Thermal Conductivity (W/m$\cdot$K)} \\
+    \hline
+    Copper Alloy 110 (square)         & 1.27 W × 1.27 H × 28.50 L & 388 \\
+    Copper Alloy 110 (round)          & 1.27 D × 17.20 L           & 388 \\
+    Stainless Steel Alloy 303 (round) & 0.95 D × 28.50 L           & 16  \\
+    Aluminum Alloy 6061-T6 (round)    & 1.27 D × 28.50 L           & 167 \\
+    \hline
+    \end{tabular}
+    \caption{Various fin material dimensions and thermal conductivities.}
+    \label{tab:fin_materials}
+\end{table}
+
+\newpage
+
+% -------------------------------------------------
+\section*{Process and Method}
+\subsection*{Laboratory Procedure}
+\begin{paracol}{2}
+    \begin{enumerate}
+        \item Connect one fin to the data acquisition system and note the geometry and material.
+        \item Run the Python program and record steady-state temperature data for 10–30 seconds.
+    \end{enumerate}
+\switchcolumn
+    \begin{enumerate}[start=3]
+        \item Record voltage and current for each fin.
+        \item Repeat the procedure for all four fins (copper square, copper round, stainless steel, aluminum).
+    \end{enumerate}
+\end{paracol}
+
+\subsection*{Calculation Method}
+\textbf{Variables used:}
+\begin{paracol}{2}
+    \begin{itemize}
+        \item $T(x)$: Temperature at $x$ along fin length
+        \item $T_\infty$: Ambient temperature
+        \item $T_b$: Base temperature of the fin
+        \item $L$: Length of the fin
+        \item $P$: Perimeter of the fin cross-section
+    \end{itemize}
+\switchcolumn
+    \begin{itemize}
+        \item $A_c$: Cross-sectional area of the fin
+        \item $k$: Thermal conductivity of the fin material
+        \item $h$: Convection coefficient (to be determined)
+        \item $m = \sqrt{\frac{hP}{kA_c}}$: Fin parameter
+    \end{itemize}
+\end{paracol}
+
+\vspace{-1em}
+
+\subsubsection*{Convection Coefficient $h$ Calculation Using Least Squares Fit}
+\begin{enumerate}
+    \item Use an iterative numerical method to vary $h$ and minimize the error function. At each iteration:
+    \begin{itemize}
+        \item Compute $m = \sqrt{\frac{hP}{kA_c}}$.
+        \item Generate predicted $T(x)$ values using the fin equation.
+        \item Evaluate the total squared error.
+    \end{itemize}
+    
+    \item Continue iterating until the error is minimized within a physically reasonable tolerance. The corresponding value of $h$ is the best-fit convection coefficient.
+
+    \item Repeat process for every fin to find each respective convection coefficient.
+\end{enumerate}
+
+\subsubsection*{Fin Heat Transfer Magnitude $q_f$ Calculation}
+\begin{enumerate}
+    \item Use the previously determined value of $h$ for each fin to compute the fin parameter m.
+    
+    \item Assuming an insulated tip, calculate the total heat transferred by conduction from the base using equation 2.
+    
+    \item Repeat this calculation for each fin using its respective geometry, material properties, and base/ambient temperatures.
+\end{enumerate}
+
+
+\newpage
+
+% -------------------------------------------------
+\section*{Results}
+
+\subsection*{Data}
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Fin Type & Thermocouple \# & Distance (cm) & Temperature (°C) & Notes \\
+\midrule
+Copper (Square) & 0 & 0 & 64.77 & Base Temp \\
+ & 1 & 3.06 & 61.40 & \\
+ & 2 & 5.50 & 60.49 & \\
+ & 3 & 9.82 & 58.16 & \\
+ & 4 & 17.15 & 54.02 & \\
+ & 5 & 22.07 & 53.51 & \\
+ & 6 & 28.07 & 53.75 & \\
+ & 7 & \textbf{N/A} & 22.32 & Ambient Temp \\
+\midrule
+Copper (Rod) & 0 & 0 & 75.90 & Base Temp \\
+ & 1 & 3.09 & 73.26 & \\
+ & 2 & 5.56 & 71.88 & \\
+ & 3 & 9.80 & 69.52 & \\
+ & 4 & 17.15 & 67.97 & \\
+ & 5 & \textbf{N/A} & \textbf{N/A} & No Thermocouple \\
+ & 6 & \textbf{N/A} & \textbf{N/A} & No Thermocouple \\
+ & 7 & \textbf{N/A} & 22.57 & Ambient Temp \\
+\midrule
+Stainless Steel (Rod) & 0 & 0 & 95.70 & Base Temp \\
+ & 1 & 3.10 & 61.15 & \\
+ & 2 & 5.44 & 46.65 & \\
+ & 3 & 9.81 & 31.88 & \\
+ & 4 & 17.22 & 24.04 & \\
+ & 5 & 22.07 & 22.94 & \\
+ & 6 & 28.45 & 22.75 & \\
+ & 7 & \textbf{N/A} & 21.87 & Ambient Temp \\
+\midrule
+Aluminium (Rod) & 0 & 0 & 85.77 & Base Temp \\
+ & 1 & 4.35 & 79.88 & \\
+ & 2 & 5.41 & 74.27 & \\
+ & 3 & 9.72 & 66.52 & \\
+ & 4 & 17.15 & 59.24 & \\
+ & 5 & 22.07 & 56.99 & \\
+ & 6 & 28.07 & 55.05 & \\
+ & 7 & \textbf{N/A} & 21.50 & Ambient Temp \\
+\bottomrule
+\end{tabular}
+\caption{Raw average thermocouple temperature data collected for each fin.}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \textbf{Keithley Meter} & \textbf{Stainless Steel} & \textbf{Copper (Round)} & \textbf{Copper (Square)} & \textbf{Aluminum} \\
+    \hline
+    Voltage (V) & 42.8 & 40.0 & 40.2 & 45.3 \\
+    Current (mA) & 215 & 213 & 216 & 245 \\
+    Power (W) & 9.20 & 8.52 & 8.68 & 11.1 \\
+    \hline
+    \end{tabular}
+    \caption{Voltage and current measurements from the Keithley meter for different materials}
+    \label{tab:keithley_meter}
+\end{table}
+
+\newpage
+\subsection*{Plots}
+\begin{paracol}{2}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{Square Copper T Distribution.jpg}
+        \includegraphics[width=0.5\textwidth]{Circle Copper T Distribution.jpg}
+    \end{figure}
+\switchcolumn
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{Stainless Steel T Distribution.jpg}
+        \includegraphics[width=0.5\textwidth]{Aluminium T Distribution.jpg}
+    \end{figure}
+\end{paracol}
+\begin{figure}[H]
+    \caption*{Figure 4: All four pins' experimental temperature distributions along pin lengths.}
+\end{figure}
+
+\subsection*{Calculated Results}
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+Fin Type & $h$ (W/m$^2$·K) & $q_f$ (W) & Base $T_b$ (°C) & Tip $T_t$ (°C) & Ambient $T_\infty$ (°C) & $T_b - T_t$ (°C) \\
+\midrule
+Copper (Square) & 10.82 & 5.46 & 64.77 & 53.75 & 22.32 & 11.02 \\
+Copper (Round) & 14.95 & 4.97 & 75.90 & 67.97 & 22.57 & 7.93 \\
+Stainless Steel & 15.56 & 1.69 & 95.70 & 22.75 & 21.87 & 72.95 \\
+Aluminum & 10.34 & 5.13 & 85.77 & 55.50 & 21.50 & 30.72 \\
+\bottomrule
+\end{tabular}
+\caption{Calculated convection coefficients, heat transfer rates and boundary temperatures.}
+\end{table}
+
+% -------------------------------------------------
+\section*{Discussion}
+\begin{enumerate}
+    \item \textbf{Explain the variation of temperature differences between fin base and tip between fins.}
+
+    Pins with a much higher conductivity, such as copper, will more quickly transfer heat from the heated base to the tip of the fin (higher heat transfer q), and therefore more quickly change temperature, producing a much smaller temperature gradient and higher tip temperature. The opposite is true for pins of lesser thermal conductivity with similar cross-sectional area, such as the stainless steel, as this decreases the total heat transfer through the pin from the base to the fin meaning the gradient will be much steeper. \newline
+
+    In this experiment, the thermal conduction coefficient for the square copper fin was around 388, which was much larger than for the steel pin (16) and a little larger than for the aluminium pin (167). This coincides with the resulting temperature differences from base to tip, which was small for both copper fins (11.02 °C and 7.93 °C for square and round profiles respectively), slightly larger for aluminium (30.72 °C) and very large for the steel pin (72.95 °C). This directly shows the trend between conduction coefficient and temperature difference in the fin. The difference in temperature change from the square copper to circular copper specimen is likely caused by a combination of factors, including:
+    \begin{enumerate}
+        \item Increased convection in the circular profile due to decreased length and perimeter.
+
+        \item Greater base temperature in the circular profile with similar ambient temperature, also causing increased convection.
+
+        \item Natural error caused by variation in convection on the pin surfaces and varying material properties, including density, heat capacity and dimensions.
+    \end{enumerate}
+    
+    \item \textbf{Discuss how geometry and material properties affect the convection coefficient and heat transfer rate.}
+
+    From the heat equation, the heat transfer calculated for the square copper fin was 5.46 W, which is slightly greater than the 4.97 W of the circular copper fin and the 5.13 W of the aluminium fin, and much greater than the 1.69 W of the steel fin. \newline
+    
+    A comparatively low heat transfer is expected for the steel fin, as it had a very low conduction coefficient and therefore poorly transfers heat throughout its length. The general trend shows decreasing heat transfer with decreasing conduction coefficient (from copper to steel). \newline
+    
+    The smaller variability in heat transfer from copper to aluminium is likely due to the hotter base temperature in the aluminium, which when paired with the same ambient temperature as copper, increases the heat transfer. From equation 2, increasing only the base temperature directly increases the heat transfer in the fin. With a base temperature more closely matching that of the copper, the expected heat transfer would be lower. \newline
+
+    The difference in heat transfer values for both copper specimen has to do with their base temperatures and perimeters. From equation 2, an increase in perimeter correlates directly to an increase in heat transfer. The square fin has a much greater perimeter than the circular fin, therefore greatly increasing heat transfer through the fin.\newline
+
+    The convection coefficient is primarily dependent on the surface area, volume and conduction coefficient. This relationship is shown in both the heat transfer equation and the non-dimensional temperature equations above. \newline
+    
+    Characteristic length (ratio of volume to surface area) is inversely correlated to the convection coefficient, meaning the materials with a much greater volume to surface area ratio are typically less convective. This is shown by the relatively low convection coefficient of the square copper fin compared to both the steel and circular copper fins \textemdash the circular copper fin has a much smaller surface area because it is much shorter and it has a smaller perimeter, and the steel fin also has a much lesser perimeter.\newline
+
+    The relative conduction coefficient of the aluminium is fairly high, meaning the temperature gradient in the aluminium is much smaller. Because of this, one would expect a slightly greater convection coefficient. This is not the case due to the slightly larger characteristic length of the aluminium, as well as the length of the aluminium, which creates a lower temperature at the tip and decreases local convection at the tip. \newline
+
+    The steel fin has a much smaller conduction coefficient than the other materials, which generally would correlate to a decrease in the convection coefficient. However, this is not the case due to the very high base temperature paired with the lower characteristic length. \newline
+    
+    \item \textbf{Compare calculated $q_f$ with the heater power input. Should they be equal? Discuss possible discrepancies (heat losses, measurement error, etc.).}
+    
+    All four heater power inputs are much greater than the calculated heat transfer values through the fins, which indicates major power losses for every fin during the experiment. This should be mainly caused by heat loss through convection, so one would expect that the fin with the greater convection coefficient would have a greater power loss.
+    \begin{enumerate}
+        \item The steel had the greatest convection coefficient of around 15.56, and also exhibited the greatest heat loss, which was around $9.20 - 1.69 = 7.51$ W.
+        \item The aluminium had the smallest convection coefficient of around 10.34, and exhibited a heat loss of around $11.1 - 5.13 = 5.97$ W.
+        \item The circular copper had a larger convection coefficient of around 14.95, and exhibited the least heat loss, which was around $8.52 - 4.97 = 3.55$ W.
+        \item The square copper had a smaller convection coefficient of around 10.82, and exhibited the least heat loss, which was around $8.68 - 5.46 = 3.22$ W.
+    \end{enumerate}
+    The general trend from this experiment qualifies the energy loss by convection, however two discrepencies need to be clarified. 
+    
+    Given the small convection coefficient in the aluminium, the expected power loss should be smaller, but the aluminium had the second largest power loss. As stated before, this is likely caused by the fact that the aluminium has the second largest surface area for convection, meaning there will be great power loss despite other properties decreasing it.
+
+    Given the large convection coefficient in the circular copper, the expected power loss should be much greater, but the power loss was very small (close to that of the square profile copper). Using similar logic as the aluminium case, the very short length of the circular copper compared to the other fins greatly reduced surface area exposed to convection, therefore reducing the maximum amount of heat that could be lost to surroundings.
+    
+    
+    
+\end{enumerate}
+
+% -------------------------------------------------
+\section*{Conclusion}
+This pin-fin experiment confirms the expected relationship between material conductivity, geometry, and heat transfer, while also revealing key discrepancies that highlight the importance of conduction-convection coupling. Copper fins, with their high thermal conductivity, showed small temperature gradients and high tip temperatures, while the steel fin exhibited a steep gradient due to poor conduction. The aluminium fin, despite having a lower convection coefficient, showed significant power loss—likely due to its large surface area and elevated base temperature. Conversely, the circular copper fin had a high convection coefficient but low power loss, which can be explained by its short length and reduced surface area. Overall, these results emphasize that both geometry and material properties must be considered together when analyzing fin performance, especially under natural convection.
+
+\newpage
+% -------------------------------------------------
+\section*{Appendix}
+
+\subsection*{A. Thermocouple Locations on Pins (Distance in cm)}
+% -------------------------------------------------
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \textbf{Thermocouple \#} & \textbf{Stainless Steel} & \textbf{Copper (Round)} & \textbf{Copper (Square)} & \textbf{Aluminum} \\
+    \hline
+    1 & 3.10 & 3.09 & 3.06 & 4.35 \\
+    2 & 5.44 & 5.56 & 5.50 & 5.41 \\
+    3 & 9.81 & 9.80 & 9.82 & 9.72 \\
+    4 & 17.22 & 17.15 & 17.15 & 17.15 \\
+    5 & 22.07 & \textbf{N/A} & 22.07 & 22.07 \\
+    6 & 28.45 & \textbf{N/A} & 28.07 & 28.07 \\
+    7 & 21.87 & 22.57 & 22.32 & 21.50 \\
+    \hline
+    \end{tabular}
+    \caption{Distances from base for thermocouples on different fin materials}
+    \label{tab:thermocouple_distances}
+\end{table}
+
+\subsection*{B. Operating Conditions}
+% -------------------------------------------------
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \textbf{Keithley Meter} & \textbf{Stainless Steel} & \textbf{Copper (Round)} & \textbf{Copper (Square)} & \textbf{Aluminum} \\
+    \hline
+    Voltage (V) & 42.8 & 40.0 & 40.2 & 45.3 \\
+    Current (mA) & 215 & 213 & 216 & 245 \\
+    Power (W) & 9.20 & 8.52 & 8.68 & 11.1 \\
+    \hline
+    \end{tabular}
+    \caption{Voltage and current measurements from the Keithley meter for different materials}
+    \label{tab:keithley_meter}
+\end{table}
+
+
+\subsection*{C. MatLab Calculation Code}
+% -------------------------------------------------
+
+\begin{lstlisting}
+clear;
+clc;
+figs = findall(0, 'Type', 'figure');
+for k = 1:length(figs)
+    clf(figs(k));
+end
+
+%% DATA %%
+
+%$% Copper (Square) Data %$%
+T_copS_avg = [64.77, 61.40, 60.49, 58.16, 54.02, 53.51, 53.75];
+TC_copS_dist = [0.00, 3.06, 5.50, 9.82, 17.15, 22.07, 28.07] * 10^(-2);
+T_copS_amb = 22.32;
+
+%$% Copper (Circle) Data %$%
+T_copC_avg = [75.90, 73.26, 71.88, 69.52, 67.97];
+TC_copC_dist = [0.00, 3.09, 5.56, 9.80, 17.15] * 10^(-2);
+T_copC_amb = 22.57;
+
+%$% Stainless Steel Data %$%
+T_steel_avg = [95.70, 61.15, 46.65, 31.88, 24.04, 22.94, 22.75];
+TC_steel_dist = [0.00, 3.10, 5.44, 9.81, 17.22, 22.07, 28.45] * 10^(-2);
+T_steel_amb = 21.87;
+
+%$% Aluminium Data %$%
+T_alum_avg = [85.77, 79.88, 74.27, 66.52, 59.24, 56.99, 55.05];
+TC_alum_dist = [0.00, 4.35, 5.41, 9.72, 17.15, 22.07, 28.07] * 10^(-2);
+T_alum_amb = 21.50;
+
+%% PLOTS %%
+
+%$% Copper (Square) Plot %$%
+figure(1);
+hold on;
+plot(TC_copS_dist, T_copS_avg, '-r', 'LineWidth', 1.5);
+yline(T_copS_amb, '--k', 'LineWidth', 1.5);
+hold off;
+xlabel("Distance Along Fin from Base to Tip (m)"); ylabel("Pin Fin Temperature (C)");
+title({"Square Copper Pin Fin Steady-State","Temperature Distribution"});
+legend("Fin Temp","Air Temp",'Location','northeast');
+
+%$% Copper (Circle) Plot %$%
+figure(2);
+hold on;
+plot(TC_copC_dist, T_copC_avg, '-r', 'LineWidth', 1.5);
+yline(T_copC_amb, '--k', 'LineWidth', 1.5);
+hold off;
+xlabel("Distance Along Fin from Base to Tip (m)"); ylabel("Pin Fin Temperature (C)");
+title({"Circle Copper Pin Fin Steady-State","Temperature Distribution"});
+legend("Fin Temp","Air Temp",'Location','northeast');
+
+%$% Stainless Steel Plot %$%
+figure(3);
+hold on;
+plot(TC_steel_dist, T_steel_avg, '-r', 'LineWidth', 1.5);
+yline(T_steel_amb, '--k', 'LineWidth', 1.5);
+hold off;
+xlabel("Distance Along Fin from Base to Tip (m)"); ylabel("Pin Fin Temperature (C)");
+title({"Stainless Steel Pin Fin Steady-State","Temperature Distribution"});
+legend("Fin Temp","Air Temp",'Location','northeast');
+
+%$% Aluminium) Plot %$%
+figure(4);
+hold on;
+plot(TC_alum_dist, T_alum_avg, '-r', 'LineWidth', 1.5);
+yline(T_alum_amb, '--k', 'LineWidth', 1.5);
+hold off;
+xlabel("Distance Along Fin from Base to Tip (m)"); ylabel("Pin Fin Temperature (C)");
+title({"Aluminium Pin Fin Steady-State","Temperature Distribution"});
+legend("Fin Temp","Air Temp",'Location','northeast');
+
+%% CONVECTION COEFFICIENT CALCS %%
+
+m = @(h, P, k, A) sqrt((h*P) / (k*A));
+theta = @(x, h, L, m, k) (cosh(m *(L - x)) + (h / (m*k)) * sinh(m*(L - x))) / (cosh(m*L) + (h / (m*k)) * sinh(m*L));
+
+%$% Copper (Square) h Calculation %$%
+h_guess = 11; % W / (m^2 * K)
+k_cop = 388; % W / (m * K)
+A_copS = (1.27 * 10^(-2))^2; % m^2
+L_copS = 28.50 * 10^(-2); % m
+P_copS = 4*(1.27*10^(-2)); % m
+
+S_copS = 10;
+i = 0;
+dS = 1;
+while dS > 0.00001 && i < 100
+    m_copS = m(h_guess, P_copS, k_cop, A_copS);
+    theta_copS = @(n) theta(TC_copS_dist(n), h_guess, L_copS, m_copS, k_cop);
+    
+    % Thermocouple 1
+    T_copS_1 = T_copS_amb + (T_copS_avg(1) - T_copS_amb) * theta_copS(2);
+    err_copS_1 = T_copS_1 - T_copS_avg(2);
+    % Thermocouple 2
+    T_copS_2 = T_copS_amb + (T_copS_avg(1) - T_copS_amb) * theta_copS(3);
+    err_copS_2 = T_copS_2 - T_copS_avg(3);    
+    % Thermocouple 3
+    T_copS_3 = T_copS_amb + (T_copS_avg(1) - T_copS_amb) * theta_copS(4);
+    err_copS_3 = T_copS_3 - T_copS_avg(4);    
+    % Thermocouple 4
+    T_copS_4 = T_copS_amb + (T_copS_avg(1) - T_copS_amb) * theta_copS(5);
+    err_copS_4 = T_copS_4 - T_copS_avg(5);    
+    % Thermocouple 5
+    T_copS_5 = T_copS_amb + (T_copS_avg(1) - T_copS_amb) * theta_copS(6);
+    err_copS_5 = T_copS_5 - T_copS_avg(6);    
+    % Thermocouple 6
+    T_copS_6 = T_copS_amb + (T_copS_avg(1) - T_copS_amb) * theta_copS(7);
+    err_copS_6 = T_copS_6 - T_copS_avg(7);
+    
+    S_copS_new = err_copS_1^2 + err_copS_2^2 + err_copS_3^2 + err_copS_4^2 + err_copS_5^2 + err_copS_6^2;
+    i = i + 1;
+    dS = abs(S_copS_new - S_copS);
+    if dS > 1
+        h_guess = h_guess - 0.1*sqrt(S_copS_new / 6);
+    elseif dS > 0.01
+        h_guess = h_guess - 0.05*sqrt(S_copS_new / 6);
+    elseif dS > 0.005
+        h_guess = h_guess - 0.005*sqrt(S_copS_new / 6);
+    end
+    S_copS = S_copS_new;
+end
+h_copS = h_guess
+
+%$% Copper (Circle) h Calculation %$%
+h_guess = 15;
+A_copC = pi *(1.27 * 10^(-2) / 2)^2; % m^2
+L_copC = 17.20 * 10^(-2); % m
+P_copC = 2*pi*(1.27*10^(-2) / 2); % m
+
+S_copC = 10;
+i = 0;
+dS = 1;
+while dS > 0.00001 && i < 100
+    m_copC = m(h_guess, P_copC, k_cop, A_copC);
+    theta_copC = @(n) theta(TC_copC_dist(n), h_guess, L_copC, m_copC, k_cop);
+    
+    % Thermocouple 1
+    T_copC_1 = T_copC_amb + (T_copC_avg(1) - T_copC_amb) * theta_copC(2);
+    err_copC_1 = T_copC_1 - T_copC_avg(2);
+    % Thermocouple 2
+    T_copC_2 = T_copC_amb + (T_copC_avg(1) - T_copC_amb) * theta_copC(3);
+    err_copC_2 = T_copC_2 - T_copC_avg(3);    
+    % Thermocouple 3
+    T_copC_3 = T_copC_amb + (T_copC_avg(1) - T_copC_amb) * theta_copC(4);
+    err_copC_3 = T_copC_3 - T_copC_avg(4);    
+    % Thermocouple 4
+    T_copC_4 = T_copC_amb + (T_copC_avg(1) - T_copC_amb) * theta_copC(5);
+    err_copC_4 = T_copC_4 - T_copC_avg(5);    
+    
+    S_copC_new = err_copC_1^2 + err_copC_2^2 + err_copC_3^2 + err_copC_4^2;
+    i = i + 1;
+    dS = abs(S_copC_new - S_copC);
+    if dS > 1
+        h_guess = h_guess - 0.1*sqrt(S_copC_new / 6);
+    elseif dS > 0.05
+        h_guess = h_guess - 0.004*sqrt(S_copC_new / 6);
+    elseif dS > 0.005
+        h_guess = h_guess - 0.00004*sqrt(S_copC_new / 6);
+    end
+    S_copC = S_copC_new;
+end
+h_copC = h_guess
+
+%$% Stainless Steel h Calculation %$%
+h_guess = 20; % W / (m^2 * K)
+k_steel = 16; % W / (m * K)
+A_steel = pi * (0.95 * 10^(-2) / 2)^2; % m^2
+L_steel = 28.50 * 10^(-2); % m
+P_steel = 2*pi*(0.95 * 10^(-2) / 2); % m
+
+S_steel = 5;
+i = 0;
+dS = 1;
+while dS > 0.00001 && i < 100
+    m_steel = m(h_guess, P_steel, k_steel, A_steel);
+    theta_steel = @(n) theta(TC_steel_dist(n), h_guess, L_steel, m_steel, k_steel);
+    
+    % Thermocouple 1
+    T_steel_1 = T_steel_amb + (T_steel_avg(1) - T_steel_amb) * theta_steel(2);
+    err_steel_1 = T_steel_1 - T_steel_avg(2);
+    % Thermocouple 2
+    T_steel_2 = T_steel_amb + (T_steel_avg(1) - T_steel_amb) * theta_steel(3);
+    err_steel_2 = T_steel_2 - T_steel_avg(3);    
+    % Thermocouple 3
+    T_steel_3 = T_steel_amb + (T_steel_avg(1) - T_steel_amb) * theta_steel(4);
+    err_steel_3 = T_steel_3 - T_steel_avg(4);    
+    % Thermocouple 4
+    T_steel_4 = T_steel_amb + (T_steel_avg(1) - T_steel_amb) * theta_steel(5);
+    err_steel_4 = T_steel_4 - T_steel_avg(5);    
+    % Thermocouple 5
+    T_steel_5 = T_steel_amb + (T_steel_avg(1) - T_steel_amb) * theta_steel(6);
+    err_steel_5 = T_steel_5 - T_steel_avg(6);    
+    % Thermocouple 6
+    T_steel_6 = T_steel_amb + (T_steel_avg(1) - T_steel_amb) * theta_steel(7);
+    err_steel_6 = T_steel_6 - T_steel_avg(7);
+    
+    S_steel_new = err_steel_1^2 + err_steel_2^2 + err_steel_3^2 + err_steel_4^2 + err_steel_5^2 + err_steel_6^2;
+    i = i + 1;
+    dS = abs(S_steel_new - S_steel);
+    if dS > 1
+        h_guess = h_guess - 0.5*sqrt(S_steel_new / 6);
+    elseif dS > 0.01
+        h_guess = h_guess - 0.2*sqrt(S_steel_new / 6);
+    elseif dS > 0.005
+        h_guess = h_guess - 0.1*sqrt(S_steel_new / 6);
+    end
+    S_steel = S_steel_new;
+end
+h_steel = h_guess
+
+%$% Aluminium h Calculation %$%
+h_guess = 15; % W / (m^2 * K)
+k_alum = 167; % W / (m * K)
+A_alum = pi * (1.27 * 10^(-2) / 2)^2; % m^2
+L_alum = 28.50 * 10^(-2); % m
+P_alum = 2*pi*(1.27 * 10^(-2) / 2); % m
+
+S_alum = 10;
+i = 0;
+dS = 1;
+while dS > 0.00001 && i < 100
+    m_alum = m(h_guess, P_alum, k_alum, A_alum);
+    theta_alum = @(n) theta(TC_alum_dist(n), h_guess, L_alum, m_alum, k_alum);
+    
+    % Thermocouple 1
+    T_alum_1 = T_alum_amb + (T_alum_avg(1) - T_alum_amb) * theta_alum(2);
+    err_alum_1 = T_alum_1 - T_alum_avg(2);
+    % Thermocouple 2
+    T_alum_2 = T_alum_amb + (T_alum_avg(1) - T_alum_amb) * theta_alum(3);
+    err_alum_2 = T_alum_2 - T_alum_avg(3);    
+    % Thermocouple 3
+    T_alum_3 = T_alum_amb + (T_alum_avg(1) - T_alum_amb) * theta_alum(4);
+    err_alum_3 = T_alum_3 - T_alum_avg(4);    
+    % Thermocouple 4
+    T_alum_4 = T_alum_amb + (T_alum_avg(1) - T_alum_amb) * theta_alum(5);
+    err_alum_4 = T_alum_4 - T_alum_avg(5);    
+    % Thermocouple 5
+    T_alum_5 = T_alum_amb + (T_alum_avg(1) - T_alum_amb) * theta_alum(6);
+    err_alum_5 = T_alum_5 - T_alum_avg(6);    
+    % Thermocouple 6
+    T_alum_6 = T_alum_amb + (T_alum_avg(1) - T_alum_amb) * theta_alum(7);
+    err_alum_6 = T_alum_6 - T_alum_avg(7);
+    
+    S_alum_new = err_alum_1^2 + err_alum_2^2 + err_alum_3^2 + err_alum_4^2 + err_alum_5^2 + err_alum_6^2;
+    i = i + 1;
+    dS = abs(S_alum_new - S_alum);
+    if dS > 1
+        h_guess = h_guess - 0.1*sqrt(S_alum_new / 6);
+    elseif dS > 0.1
+        h_guess = h_guess - 0.01*sqrt(S_alum_new / 6);
+    elseif dS > 0.01
+        h_guess = h_guess - 0.001*sqrt(S_alum_new / 6);
+    end
+    S_alum = S_alum_new;
+end
+h_alum = h_guess
+
+%% HEAT FLOW CALCS %%
+
+q_f = @(h, P, k, A, T_b, T_infty, m, L) sqrt(h*P*k*A)*(T_b - T_infty) * (sinh(m*L) + (h/(m*k))*cosh(m*L)) / (cosh(m*L) + (h/(m*k))*sinh(m*L));
+
+%$% Copper (Square) q_f Calculation %$%
+m_copS = m(h_copS, P_copS, k_cop, A_copS);
+q_copS = q_f(h_copS, P_copS, k_cop, A_copS, T_copS_avg(1), T_copS_amb, m_copS, L_copS)
+
+%$% Copper (Circle) q_f Calculation %$%
+m_copC = m(h_copC, P_copC, k_cop, A_copC);
+q_copC = q_f(h_copC, P_copC, k_cop, A_copC, T_copC_avg(1), T_copC_amb, m_copC, L_copC)
+
+%$% Stainless Steel q_f Calculation %$%
+m_steel = m(h_steel, P_steel, k_steel, A_steel);
+q_steel = q_f(h_steel, P_steel, k_steel, A_steel, T_steel_avg(1), T_steel_amb, m_steel, L_steel)
+
+%$% Aluminium q_f Calculation %$%
+m_alum = m(h_alum, P_alum, k_alum, A_alum);
+q_alum = q_f(h_alum, P_alum, k_alum, A_alum, T_alum_avg(1), T_alum_amb, m_alum, L_alum)
+
+%% BOUNDARY TEMPERATURE VECTORS %%
+
+T_b_v = [T_copS_avg(1);
+         T_copC_avg(1);
+         T_steel_avg(1);
+         T_alum_avg(1)]
+
+T_infty_v = [T_copS_amb;
+             T_copC_amb;
+             T_steel_amb;
+             T_alum_amb]
+
+T_t = [T_copS_avg(7);
+         T_copC_avg(5);
+         T_steel_avg(7);
+         T_alum_avg(7)]
+\end{lstlisting}
+
+
+\end{document}
